@@ -1,14 +1,17 @@
-﻿using UnitTest.APP;
+﻿using Moq;
+using UnitTest.APP;
 
 namespace UnitTest.Test
 {
     public class CalculatorTest
     {
         Calculator calculator { get; set; }
+        Mock<ICalculatorService> myMock { get; set; }
+
         public CalculatorTest()
         {
-            //calculator = new();
-
+            myMock = new();
+            calculator = new(myMock.Object);
         }
 
         [Fact]
@@ -89,9 +92,16 @@ namespace UnitTest.Test
         [InlineData(10, 2, 12)]
         public void Add_SimpleValues_ReturnTotalValue(int a, int b, int expectedTotal)
         {
+            myMock.Setup(x => x.add(a, b)).Returns(expectedTotal);
+
             var actualTotal = calculator.add(a, b);
 
             Assert.Equal(expectedTotal, actualTotal);
+
+            myMock.Verify(x => x.add(a, b), Times.Once);
+            myMock.Verify(x => x.add(a, b), Times.Never);
+            myMock.Verify(x => x.add(a, b), Times.AtLeast(2));
+
         }
 
         [Theory]
@@ -103,6 +113,48 @@ namespace UnitTest.Test
 
             Assert.Equal(expectedTotal, actualTotal);
         }
+
+        [Theory]
+        [InlineData(2, 3, 6)]
+        public void Multip_SimpleValues_ReturnsMultipValues(int a, int b, int expectedTotal)
+        {
+            myMock.Setup(x => x.multip(a, b)).Returns(expectedTotal);
+
+            var actualTotal = calculator.multip(a, b);
+
+            Assert.Equal(expectedTotal, actualTotal);
+
+        }
+
+        [Theory]
+        [InlineData(0, 3)]
+        public void Multip_ZeroValue_ReturnsException(int a, int b)
+        {
+            myMock.Setup(x => x.multip(a, b)).Throws(new Exception("a=0 olamaz"));
+
+            var actualTotal = calculator.multip(a, b);
+
+            var exception = Assert.Throws<Exception>(() => calculator.multip(a, b));
+            Assert.Equal("a=0 olamaz", exception.Message);
+        }
+
+        [Theory]
+        [InlineData(2, 3, 6)]
+        public void Multip_SimpleValues_ReturnsMultipValue(int a, int b, int expectedTotal)
+        {
+            int actualMultip = 0;
+            myMock.Setup(x => x.multip(It.IsAny<int>(), It.IsAny<int>())).Callback<int, int>((x, y) => actualMultip = x * y);
+
+            var actualTotal = calculator.multip(a, b);
+
+            Assert.Equal(15, actualMultip);
+            Assert.Equal(expectedTotal, actualTotal);
+
+        }
+
+
+
+
 
 
     }

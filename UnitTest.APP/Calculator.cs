@@ -14,6 +14,9 @@
             return _calculatorService.add(a, b);
         }
 
+        public int multip(int a, int b)
+            => _calculatorService.multip(a, b);
+
 
     }
 }
